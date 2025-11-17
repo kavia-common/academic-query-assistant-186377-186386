@@ -1,47 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import Chat from './components/Chat';
 
 // PUBLIC_INTERFACE
 function App() {
+  /**
+   * App root renders a simple navbar with theme toggle and the Chat component centered below.
+   * Applies the theme to the document element via data-theme attribute.
+   */
   const [theme, setTheme] = useState('light');
 
-  // Effect to apply theme to document element
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   // PUBLIC_INTERFACE
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    /** Toggle between light and dark themes */
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
+      <nav className="navbar" role="navigation" aria-label="Top navigation">
+        <div className="brand">Academic Query Assistant</div>
+        <button
+          className="theme-toggle"
           onClick={toggleTheme}
           aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
           {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
         </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      </nav>
+
+      <main className="chat-page">
+        <Chat />
+      </main>
+
+      <div className="footer-note">AI answers are generated and may contain inaccuracies. Verify critical information.</div>
     </div>
   );
 }
