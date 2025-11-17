@@ -24,3 +24,7 @@ This workspace contains the frontend (React). The backend runs in a separate wor
 ## CORS reminder
 
 Backend must include the frontend origin (e.g., http://localhost:3000 and any preview URL) in allowed origins for CORS, otherwise the browser will block API calls.
+
+## MVP storage model
+
+For the MVP, the backend uses an in-memory, thread-safe session store. No database setup is required. Session histories reset when the backend restarts, which is acceptable for the current scope focused on functionality and tests.
