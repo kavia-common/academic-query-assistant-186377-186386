@@ -6,6 +6,17 @@
  */
 const BASE_URL = 'http://localhost:3001';
 
+/** Normalize fetch/network errors to be more user-friendly */
+function toUserError(err, fallback = 'Request failed') {
+  if (!err) return new Error(fallback);
+  const msg = typeof err === 'string' ? err : err.message || fallback;
+  // Common network error hints
+  if (/Failed to fetch|NetworkError|TypeError: Network/.test(msg)) {
+    return new Error('Cannot reach the backend at http://localhost:3001. Please ensure it is running and CORS allows this origin.');
+  }
+  return new Error(msg);
+}
+
 /**
  * Get or create a session id.
  * - If no session id is in localStorage, request /session to obtain one and persist it.
@@ -18,7 +29,12 @@ export async function getSessionId() {
   if (sid && typeof sid === 'string' && sid.trim() !== '') {
     return sid;
   }
-  const resp = await fetch(`${BASE_URL}/session`, { method: 'GET' });
+  let resp;
+  try {
+    resp = await fetch(`${BASE_URL}/session`, { method: 'GET', headers: { Accept: 'application/json' } });
+  } catch (e) {
+    throw toUserError(e, 'Failed to create session.');
+  }
   if (!resp.ok) {
     throw new Error(`Failed to create session: ${resp.status}`);
   }
@@ -37,12 +53,18 @@ export async function getSessionId() {
 // PUBLIC_INTERFACE
 export async function getHistory() {
   const sid = await getSessionId();
-  const resp = await fetch(`${BASE_URL}/history`, {
-    method: 'GET',
-    headers: {
-      'X-Session-Id': sid,
-    },
-  });
+  let resp;
+  try {
+    resp = await fetch(`${BASE_URL}/history`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'X-Session-Id': sid,
+      },
+    });
+  } catch (e) {
+    throw toUserError(e, 'Failed to load history.');
+  }
   // If backend creates new, capture the header
   const headerSid = resp.headers.get('X-Session-Id');
   if (headerSid && headerSid !== sid) {
@@ -61,14 +83,20 @@ export async function getHistory() {
 // PUBLIC_INTERFACE
 export async function sendChatMessage(question) {
   const sid = await getSessionId();
-  const resp = await fetch(`${BASE_URL}/chat`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Session-Id': sid,
-    },
-    body: JSON.stringify({ question }),
-  });
+  let resp;
+  try {
+    resp = await fetch(`${BASE_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'X-Session-Id': sid,
+      },
+      body: JSON.stringify({ question }),
+    });
+  } catch (e) {
+    throw toUserError(e, 'Failed to send message.');
+  }
 
   const headerSid = resp.headers.get('X-Session-Id');
   if (headerSid && headerSid !== sid) {
